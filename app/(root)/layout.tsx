@@ -69,12 +69,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ClerkProvider appearance={CLERK_APPEARANCE} localization={uzbekTranslation}>
+          <ClerkProvider appearance={CLERK_APPEARANCE} localization={uzbekTranslation} afterSignOutUrl="/">
             <ConvexClientProvider>
 
               <ProfileGuard>
                 <AuthSync />
-            <Topbar />
+                <Topbar />
 
                 {children}
                 <Navbar />
