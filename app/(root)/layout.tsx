@@ -9,6 +9,7 @@ import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 import { CLERK_APPEARANCE } from "@/constants";
 import AuthSync from "@/components/AuthSync";
 import ProfileGuard from "@/components/ProfileGuard";
+import Topbar from "@/components/site/topbar";
 // import { uzUZ } from "@clerk/localizations";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -61,7 +62,7 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col w-4xl border border-primary mx-auto relative" >
+      <body className="min-h-full flex flex-col max-w-4xl border border-primary mx-auto relative overflow-x-auto" >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -73,6 +74,8 @@ export default function RootLayout({
 
               <ProfileGuard>
                 <AuthSync />
+            <Topbar />
+
                 {children}
                 <Navbar />
               </ProfileGuard>

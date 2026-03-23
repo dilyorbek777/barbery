@@ -1,4 +1,5 @@
 import { dark } from '@clerk/themes';
+import { Calendar, House, User } from 'lucide-react';
 export const CLERK_APPEARANCE = {
   baseTheme: dark,
   variables: {
@@ -13,3 +14,21 @@ export const CLERK_APPEARANCE = {
     footer: "hidden",
   }
 }
+
+export const navLinks = [
+  {
+    label: "Bosh sahifa",
+    href: "/",
+    icon: House
+  },
+  {
+    label: "Taqvim",
+    href: "/appointments",
+    icon: Calendar
+  },
+  {
+    label: "Profil",
+    href: "/profile",
+    icon: User
+  },
+]

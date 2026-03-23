@@ -11,12 +11,12 @@ export default function ProfileGuard({ children }: { children: React.ReactNode }
   const pathname = usePathname();
 
   useEffect(() => {
-    if (user && (!user.name || !user.phone) && pathname !== "/profile") {
-      router.replace("/profile"); // force complete profile
+    if (user && (!user.name || !user.phone) && pathname !== "/profile-complete") {
+      router.replace("/profile-complete"); // force complete profile
     }
   }, [user, router, pathname]);
 
-  if (user && (!user.name || !user.phone) && pathname !== "/profile") {
+  if (user && (!user.name || !user.phone) && pathname !== "/profile-complete") {
     return <p>Redirecting to complete your profile...</p>;
   }
 
