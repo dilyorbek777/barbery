@@ -62,7 +62,7 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col max-w-4xl border border-primary mx-auto relative overflow-x-auto" >
+      <body className="min-h-full flex flex-col max-w-4xl mx-auto relative overflow-x-auto" >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
