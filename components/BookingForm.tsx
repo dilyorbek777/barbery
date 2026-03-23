@@ -38,7 +38,7 @@ export default function BookingForm() {
 
         try {
             await createAppointment({ userId: user.id, date: formattedDate, time: selectedTime });
-            alert("Booked!");
+            alert("Joy band qilindi!");
         } catch (err: any) {
             alert(err.message);
         }
