@@ -8,6 +8,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 import { CLERK_APPEARANCE } from "@/constants";
 import AuthSync from "@/components/AuthSync";
+// import { uzUZ } from "@clerk/localizations";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -26,6 +27,28 @@ export const metadata: Metadata = {
   description: "Barbery - Your trusted barber shop",
 };
 
+const uzbekTranslation = {
+  signUp: {
+    start: {
+      title: "Hisob yaratish",
+      subtitle: "Xush kelibsiz! Boshlash uchun Ro'yxatdan o'ting",
+      actionText: "Avvalroq ro'yxatdan o'tganmisiz?",
+      actionLink: "Kirish",
+    },
+    socialButtonsBlockButton: " {{provider|titleize}} orqali davom etish",
+  },
+  // If you also use the Sign In form, add this:
+  signIn: {
+    start: {
+      title: "Tizimga kirish",
+      subtitle: "Davom etish uchun hisobingizga kiring",
+      actionText: "Hisobingiz yo'qmi?",
+      actionLink: "Ro'yxatdan o'tish",
+    },
+  },
+  footerAction__signIn: "Kirish",
+  footerAction__signUp: "Ro'yxatdan o'tish",
+};
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,7 +67,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ClerkProvider appearance={CLERK_APPEARANCE}>
+          <ClerkProvider appearance={CLERK_APPEARANCE} localization={uzbekTranslation}>
             <ConvexClientProvider>
 
               <AuthSync />
