@@ -8,6 +8,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 import { CLERK_APPEARANCE } from "@/constants";
 import AuthSync from "@/components/AuthSync";
+import ProfileGuard from "@/components/ProfileGuard";
 // import { uzUZ } from "@clerk/localizations";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -60,7 +61,7 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col w-4xl border border-primary mx-auto" >
+      <body className="min-h-full flex flex-col w-4xl border border-primary mx-auto relative" >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -70,9 +71,11 @@ export default function RootLayout({
           <ClerkProvider appearance={CLERK_APPEARANCE} localization={uzbekTranslation}>
             <ConvexClientProvider>
 
-              <AuthSync />
-              {children}
-              <Navbar />
+              <ProfileGuard>
+                <AuthSync />
+                {children}
+                <Navbar />
+              </ProfileGuard>
             </ConvexClientProvider>
           </ClerkProvider>
         </ThemeProvider>

@@ -19,6 +19,30 @@ export const createUser = mutation({
   },
 });
 
+
+export const updateUserProfile = mutation({
+  args: {
+    clerkId: v.string(),
+    name: v.string(),
+    phone: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    return await ctx.db.patch(user._id, {
+      name: args.name,
+      phone: args.phone,
+    });
+  },
+});
+
 export const getUser = query({
   args: {
     clerkId: v.string(),
