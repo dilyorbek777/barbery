@@ -4,6 +4,10 @@ import "@/app/globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/site/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ClerkProvider } from "@clerk/nextjs";
+import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
+import { CLERK_APPEARANCE } from "@/constants";
+import AuthSync from "@/components/AuthSync";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -40,8 +44,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Navbar />
+          <ClerkProvider appearance={CLERK_APPEARANCE}>
+            <ConvexClientProvider>
+
+              <AuthSync />
+              {children}
+              <Navbar />
+            </ConvexClientProvider>
+          </ClerkProvider>
         </ThemeProvider>
       </body>
     </html>
