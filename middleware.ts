@@ -24,10 +24,13 @@ export default clerkMiddleware(async (auth, req) => {
     );
   }
 
-  // 2. Admin route safety
+  // 2. Admin route safety - redirect non-authenticated users to sign-in
   if (isAdminRoute(req) && !userId) {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
+
+  // Note: Role-based access control is handled client-side in AdminGuard component
+  // because middleware doesn't have access to Convex user data
 });
 
 export const config = {

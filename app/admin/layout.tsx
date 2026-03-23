@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "@/app/globals.css";
 
 import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
+import { ClerkProvider } from "@clerk/nextjs";
+import { CLERK_APPEARANCE } from "@/constants";
+import AdminGuard from "@/components/AdminGuard";
 
 // Optional: Initialize a font
 const inter = Inter({ subsets: ["latin"] });
@@ -20,11 +23,15 @@ export default function AdminLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ConvexClientProvider>
-          <main>
-            {children}
-          </main>
-        </ConvexClientProvider>
+        <ClerkProvider appearance={CLERK_APPEARANCE}>
+          <ConvexClientProvider>
+            <AdminGuard>
+              <main>
+                {children}
+              </main>
+            </AdminGuard>
+          </ConvexClientProvider>
+        </ClerkProvider>
       </body>
     </html>
   );
