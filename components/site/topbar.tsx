@@ -28,7 +28,7 @@ const Topbar = () => {
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 flex justify-center  ">
-            <div className="w-full max-w-4xl bg-background/60 backdrop-blur-xl border border-primary/20 rounded-b-2xl md:rounded-full shadow-2xl shadow-primary/5 px-4 py-2 md:px-6 flex items-center justify-between transition-all duration-300">
+            <div className="w-full max-w-4xl bg-background/60 backdrop-blur-xl border border-primary/20 rounded-b-2xl  shadow-2xl shadow-primary/5 px-4 py-2 md:px-6 flex items-center justify-between transition-all duration-300">
 
                 {/* 💈 Logo/Brand Section */}
                 <div className="flex items-center gap-3">

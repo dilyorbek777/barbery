@@ -27,6 +27,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Barbery",
   description: "Barbery - Your trusted barber shop",
+  manifest: "/manifest.json",
 };
 
 const uzbekTranslation = {

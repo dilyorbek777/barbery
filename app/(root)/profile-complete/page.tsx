@@ -114,11 +114,11 @@ export default function ProfileCompletePage() {
               </div>
             </div>
           </CardContent>
-
+          <br />
           <CardFooter className="pt-4">
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-lg font-bold transition-all hover:shadow-lg hover:shadow-primary/20" 
+            <Button
+              type="submit"
+              className="w-full h-12 text-lg font-bold transition-all hover:shadow-lg hover:shadow-primary/20"
               disabled={loading}
             >
               {loading ? (
