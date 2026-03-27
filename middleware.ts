@@ -7,6 +7,7 @@ import { NextResponse } from "next/server"; // ✅ Add this import
 const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/api/telegram(.*)",
 ]);
 
 const isAdminRoute = createRouteMatcher([
@@ -34,5 +35,7 @@ export default clerkMiddleware(async (auth, req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)"],
+  matcher: [
+    "/((?!_next|.*\\..*|api/telegram).*)", // ✅ exclude telegram
+  ],
 };
