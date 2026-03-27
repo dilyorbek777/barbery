@@ -1,121 +1,62 @@
-// convex/telegram.ts
 "use node";
 
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 
-export const sendWelcome = action({
-  args: {
-    chatId: v.string(),
-  },
-  handler: async (_, args) => {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    const websiteUrl = process.env.WEBSITE_URL;
+// Helper to handle fetch and errors
+async function sendTelegramMessage(chatId: string, payload: object) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not set in Convex Dashboard");
 
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: args.chatId,
-        text: "💈 Welcome! Book your appointment easily:",
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "🌐 Open Website",
-                url: websiteUrl || "", 
-              },
-            ],
-          ],
-        },
-      }),
-    });
-  },
-});
+  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      ...payload,
+    }),
+  });
+
+  const result = await response.json();
+  if (!result.ok) {
+    console.error("Telegram API Error:", result);
+    throw new Error(`Telegram Error: ${result.description}`);
+  }
+  return result;
+}
 
 export const sendHello = action({
-  args: {
-    chatId: v.string(),
-  },
-  handler: async (_, args) => {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: args.chatId,
-        text: "👋 Hello! Welcome to our barbershop.\n\nWhat's your name?",
-      }),
+  args: { chatId: v.string() },
+  handler: async (ctx, args) => {
+    await sendTelegramMessage(args.chatId, {
+      text: "👋 Hello! Welcome to our barbershop.\n\nWhat's your name?",
     });
   },
 });
 
 export const askForPhone = action({
-  args: {
-    chatId: v.string(),
-  },
-  handler: async (_, args) => {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  args: { chatId: v.string() },
+  handler: async (ctx, args) => {
+    await sendTelegramMessage(args.chatId, {
+      text: "📱 Thanks! Now please share your phone number using the button below:",
+      reply_markup: {
+        keyboard: [[{ text: "📞 Share Phone Number", request_contact: true }]],
+        one_time_keyboard: true,
+        resize_keyboard: true,
       },
-      body: JSON.stringify({
-        chat_id: args.chatId,
-        text: "📱 Thanks! Now please share your phone number:",
-        reply_markup: {
-          keyboard: [
-            [
-              {
-                text: "📞 Share Phone Number",
-                request_contact: true,
-              },
-            ],
-          ],
-          one_time_keyboard: true,
-          resize_keyboard: true,
-        },
-      }),
     });
   },
 });
 
 export const sendWebsiteButton = action({
-  args: {
-    chatId: v.string(),
-  },
-  handler: async (_, args) => {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    const websiteUrl = process.env.WEBSITE_URL;
-
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  args: { chatId: v.string() },
+  handler: async (ctx, args) => {
+    const websiteUrl = process.env.WEBSITE_URL || "https://mybarbery.vercel.app";
+    await sendTelegramMessage(args.chatId, {
+      text: "✅ Thank you! Your information has been saved.\n\nYou can now book appointments through our website:",
+      reply_markup: {
+        inline_keyboard: [[{ text: "🌐 Open Website", url: websiteUrl }]],
       },
-      body: JSON.stringify({
-        chat_id: args.chatId,
-        text: "✅ Thank you! Your information has been saved.\n\nYou can now book appointments through our website:",
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "🌐 Open Website",
-                web_app: {
-                  url: websiteUrl || "",
-                },
-              },
-            ],
-          ],
-        },
-      }),
     });
   },
 });
