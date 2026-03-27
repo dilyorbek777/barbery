@@ -36,6 +36,9 @@ export default defineSchema({
   telegramUsers: defineTable({
     chatId: v.string(),
     username: v.optional(v.string()),
+    name: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    conversationState: v.optional(v.string()),
   }).index("by_chatId", ["chatId"]),
 });
 
