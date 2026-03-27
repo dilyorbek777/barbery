@@ -4,6 +4,7 @@ import { useUser, SignOutButton } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useState } from "react";
 
 // Shadcn UI Components
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,14 +12,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, CalendarDays, LogOut, User as UserIcon, CheckCircle2, XCircle, Mail, ShieldCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, CalendarDays, LogOut, User as UserIcon, CheckCircle2, XCircle, Mail, ShieldCheck, Phone, Pencil } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   const appointmentsData = useQuery(
     api.appointments.getUserAppointments,
     user ? { userId: user.id } : "skip"
+  );
+
+  const userData = useQuery(
+    api.users.getUser,
+    user ? { clerkId: user.id } : "skip"
   );
 
   // Sort appointments newest first
@@ -27,12 +38,28 @@ export default function ProfilePage() {
   }) : null;
 
   const cancelAppointment = useMutation(api.appointments.cancelAppointment);
+  const updateUserProfile = useMutation(api.users.updateUserProfile);
 
   const handleCancel = async (id: Id<"appointments">) => {
     if (!user) return;
     if (confirm("Rostdan ham bekor qilmoqchimisiz?")) {
       await cancelAppointment({ appointmentId: id, userId: user.id });
     }
+  };
+
+  const handleEditPhone = () => {
+    setPhoneNumber(userData?.phone || "");
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdatePhone = async () => {
+    if (!user) return;
+    await updateUserProfile({
+      clerkId: user.id,
+      name: user.fullName || "",
+      phone: phoneNumber,
+    });
+    setIsEditDialogOpen(false);
   };
 
   if (!isLoaded) return <div className="flex h-[80vh] items-center justify-center"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
@@ -54,6 +81,46 @@ export default function ProfilePage() {
             <p className="text-muted-foreground flex items-center justify-center md:justify-start gap-2 text-sm md:text-base font-medium">
               <Mail className="h-4 w-4" /> {user.primaryEmailAddress?.emailAddress}
             </p>
+            <div className="flex items-center justify-center md:justify-start gap-2 text-sm md:text-base font-medium">
+              <Phone className="h-4 w-4" /> 
+              <span>{userData?.phone || "Telefon raqam kiritilmagan"}</span>
+              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 p-0 hover:bg-muted"
+                    onClick={handleEditPhone}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Telefon raqamini tahrirlash</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="phone">Telefon raqami</Label>
+                      <Input
+                        id="phone"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="+998 XX XXX-XX-XX"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                      Bekor qilish
+                    </Button>
+                    <Button onClick={handleUpdatePhone}>
+                      Saqlash
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
           <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-1">

@@ -40,6 +40,13 @@ export default function ProfileCompletePage() {
       return;
     }
 
+    // Phone validation: must start with +998 and have exactly 9 digits after
+    const phoneRegex = /^\+998\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      setError("Telefon raqami +998 bilan boshlanishi va 9 ta raqamdan iborat bo'lishi kerak");
+      return;
+    }
+
     setLoading(true);
     setError("");
 

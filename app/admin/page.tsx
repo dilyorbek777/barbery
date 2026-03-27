@@ -11,12 +11,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, User, Phone, Calendar, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, User, Phone, Calendar, Clock, Users } from "lucide-react";
 
 export default function AdminPanel() {
   const appointmentsData = useQuery(api.appointments.getAllAppointmentsWithUser);
   const complete = useMutation(api.appointments.completeAppointment);
   const cancel = useMutation(api.appointments.adminCancelAppointment);
+  const clearNonBooked = useMutation(api.appointments.clearNonBookedAppointments);
 
   // 🔄 Sort: Newest Date and Latest Time first
   const appointments = appointmentsData ? [...appointmentsData].sort((a, b) => {
@@ -56,7 +57,8 @@ export default function AdminPanel() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/20">
-                    <TableHead className="w-[250px]">Mijozlar</TableHead>
+                    <TableHead className="w-[120px]">Qo'ng'iroqlar</TableHead>
+                    <TableHead className="w-[200px]">Mijozlar</TableHead>
                     <TableHead>Vaqt va Sana</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Tahrirlash</TableHead>
@@ -65,7 +67,7 @@ export default function AdminPanel() {
                 <TableBody>
                   {appointments.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-40 text-center text-muted-foreground italic">
+                      <TableCell colSpan={5} className="h-40 text-center text-muted-foreground italic">
                         Hozircha navbatlar yo'q.
                       </TableCell>
                     </TableRow>
@@ -73,12 +75,22 @@ export default function AdminPanel() {
                     appointments.map((a) => (
                       <TableRow key={a._id} className="hover:bg-muted/40 transition-colors">
                         <TableCell>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs border-primary text-primary"
+                            onClick={() => window.location.href = `tel:${a.phone}`}
+                          >
+                            <Phone className="h-3 w-3 mr-1" /> 
+                          </Button>
+                        </TableCell>
+                        <TableCell>
                           <div className="flex flex-col gap-1">
                             <span className="font-bold flex items-center gap-2">
                               <User className="h-3.5 w-3.5 text-primary" /> {a.name}
                             </span>
                             <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Phone className="h-3 w-3" /> {a.phone}
+                              <Users className="h-3 w-3" /> {a.peopleCount} {a.peopleCount === 1 ? 'kishi' : 'kishi'}
                             </span>
                           </div>
                         </TableCell>
@@ -140,7 +152,24 @@ export default function AdminPanel() {
               <CardTitle>Boshqaruv</CardTitle>
               <CardDescription>Ma'lum soatlarni yoki kunlarni band qilish.</CardDescription>
             </CardHeader>
-            <CardContent className="pt-4 border-t">
+            <CardContent className="pt-4 border-t space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+                <div>
+                  <h3 className="font-medium">Tozalash</h3>
+                  <p className="text-sm text-muted-foreground">Barcha "Band" bo'lmagan uchrashuvlarni o'chirish</p>
+                </div>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    if (confirm("Barcha 'Band' bo'lmagan uchrashuvlarni o'chirishga ishonchingiz komilmi?")) {
+                      const deletedCount = await clearNonBooked();
+                      alert(`${deletedCount} ta uchrashuv o'chirildi`);
+                    }
+                  }}
+                >
+                  Band bo'lmaganlarni tozalash
+                </Button>
+              </div>
               <DisableSlots />
             </CardContent>
           </Card>

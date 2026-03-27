@@ -1,26 +1,44 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-// ✅ CREATE APPOINTMENT
+// CREATE APPOINTMENT
 export const createAppointment = mutation({
   args: {
     userId: v.string(),
     date: v.string(),
     time: v.string(),
+    service: v.union(
+      v.literal("haircut"),
+      v.literal("haircut_beard")
+    ),
+    peopleCount: v.number(),
   },
   handler: async (ctx, args) => {
-    // check if slot already taken
-    const existing = await ctx.db
-      .query("appointments")
-      .withIndex("by_date_time", (q) =>
-        q.eq("date", args.date).eq("time", args.time)
-      )
-      .filter((q) => q.eq(q.field("status"), "booked"))
-      .first();
+    // duration
+    const baseDuration =
+      args.service === "haircut" ? 40 : 60;
 
-    if (existing) {
-      throw new Error("This time slot is already booked");
+    const totalDuration = baseDuration * args.peopleCount;
+
+    // calculate end time
+    const [h, m] = args.time.split(":").map(Number);
+    const start = new Date();
+    start.setHours(h, m, 0);
+
+    const end = new Date(start);
+    end.setMinutes(end.getMinutes() + totalDuration);
+
+    const endTime = end.toTimeString().slice(0, 5);
+
+    // prevent past booking (using local timezone UTC+05:00)
+    const now = new Date();
+    const localNow = new Date(now.getTime() + (5 * 60 * 60 * 1000));
+    const selected = new Date(`${args.date}T${args.time}`);
+    if (selected < localNow) {
+      throw new Error("Cannot book past time");
     }
+
+    // disabled slots
     const disabledSlots = await ctx.db
       .query("unavailableSlots")
       .withIndex("by_date", (q) => q.eq("date", args.date))
@@ -34,7 +52,7 @@ export const createAppointment = mutation({
       throw new Error("This hour is unavailable");
     }
 
-    // check if user profile is complete
+    // user validation
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerkId", (q) => q.eq("clerkId", args.userId))
@@ -44,11 +62,184 @@ export const createAppointment = mutation({
       throw new Error("Complete your profile first");
     }
 
+    // CHECK IF USER HAS ACTIVE APPOINTMENT
+    const hasActive = await ctx.db
+      .query("appointments")
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("userId"), args.userId),
+          q.eq(q.field("status"), "booked")
+        )
+      )
+      .first();
+
+    if (hasActive) {
+      throw new Error("Sizda allaqachon faol navbat bor. Admin navbatni tugatgandan so'ng yangi navbat olishingiz mumkin.");
+    }
+
+    // CHECK OVERLAPPING APPOINTMENTS
+    const existingAppointments = await ctx.db
+      .query("appointments")
+      .withIndex("by_date", (q) => q.eq("date", args.date))
+      .filter((q) => q.eq(q.field("status"), "booked"))
+      .collect();
+
+    const newStart = start.getTime();
+    const newEnd = end.getTime();
+
+    for (const appt of existingAppointments) {
+      const [sh, sm] = appt.time.split(":").map(Number);
+      const [eh, em] = appt.endTime.split(":").map(Number);
+
+      const apptStart = new Date();
+      apptStart.setHours(sh, sm, 0);
+
+      const apptEnd = new Date();
+      apptEnd.setHours(eh, em, 0);
+
+      const existingStart = apptStart.getTime();
+      const existingEnd = apptEnd.getTime();
+
+      // overlap condition
+      if (newStart < existingEnd && newEnd > existingStart) {
+        throw new Error("Time overlaps with another appointment");
+      }
+    }
+
     // create appointment
     return await ctx.db.insert("appointments", {
-      ...args,
+      userId: args.userId,
+      date: args.date,
+      time: args.time,
+      endTime,
+      service: args.service,
+      peopleCount: args.peopleCount,
       status: "booked",
     });
+  },
+});
+
+// GET AVAILABLE SLOTS
+export const getAvailableSlots = query({
+  args: {
+    date: v.string(),
+    service: v.union(
+      v.literal("haircut"),
+      v.literal("haircut_beard")
+    ),
+    peopleCount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const baseDuration =
+      args.service === "haircut" ? 40 : 60;
+
+    const totalDuration = baseDuration * args.peopleCount;
+
+    // Check for disabled slots first
+    const disabledSlots = await ctx.db
+      .query("unavailableSlots")
+      .withIndex("by_date", (q) => q.eq("date", args.date))
+      .collect();
+
+    if (disabledSlots.some(d => d.type === "day")) {
+      return []; // Return empty if entire day is disabled
+    }
+
+    const existing = await ctx.db
+      .query("appointments")
+      .withIndex("by_date", (q) => q.eq("date", args.date))
+      .filter((q) => q.eq(q.field("status"), "booked"))
+      .collect();
+
+    const slots: string[] = [];
+
+    // ⏰ working hours
+    let current = new Date();
+    current.setHours(9, 0, 0);
+
+    const endDay = new Date();
+    endDay.setHours(21, 0, 0);
+
+    // 🚫 Filter out past times for today (using local timezone UTC+05:00)
+    const now = new Date();
+    // Convert to local timezone (UTC+05:00)
+    const localNow = new Date(now.getTime() + (5 * 60 * 60 * 1000));
+    const localToday = localNow.toISOString().split('T')[0];
+    const isToday = args.date === localToday;
+    
+    if (isToday && current < localNow) {
+      current = new Date(localNow);
+      // Round up to next 10-minute interval
+      current.setMinutes(Math.ceil(current.getMinutes() / 10) * 10);
+      current.setSeconds(0);
+      current.setMilliseconds(0);
+    }
+
+    while (current < endDay) {
+      const slotStart = new Date(current);
+      const slotEnd = new Date(current);
+      slotEnd.setMinutes(slotEnd.getMinutes() + totalDuration);
+
+      // ❌ if exceeds working hours
+      if (slotEnd > endDay) break;
+
+      const newStart = slotStart.getTime();
+      const newEnd = slotEnd.getTime();
+
+      let conflict = false;
+
+      for (const appt of existing) {
+        const [sh, sm] = appt.time.split(":").map(Number);
+        const [eh, em] = appt.endTime.split(":").map(Number);
+
+        const aStart = new Date();
+        aStart.setHours(sh, sm, 0);
+
+        const aEnd = new Date();
+        aEnd.setHours(eh, em, 0);
+
+        if (
+          newStart < aEnd.getTime() &&
+          newEnd > aStart.getTime()
+        ) {
+          conflict = true;
+          break;
+        }
+      }
+
+      // Check if this slot is disabled
+      const slotTime = slotStart.toTimeString().slice(0, 5);
+      if (disabledSlots.some(d => d.hour === slotTime)) {
+        conflict = true;
+      }
+
+      if (!conflict) {
+        slots.push(slotTime);
+      }
+
+      // ⏩ move in 10-min steps (better UX)
+      current.setMinutes(current.getMinutes() + 10);
+    }
+
+    return slots;
+  },
+});
+
+// CHECK IF USER HAS ACTIVE APPOINTMENT
+export const hasActiveAppointment = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const activeAppointment = await ctx.db
+      .query("appointments")
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("userId"), args.userId),
+          q.eq(q.field("status"), "booked")
+        )
+      )
+      .first();
+    
+    return !!activeAppointment;
   },
 });
 
@@ -58,7 +249,7 @@ export const getUserAppointments = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("appointments")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
       .collect();
   },
 });
@@ -90,7 +281,7 @@ export const getByDate = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("appointments")
-      .withIndex("by_date_time", (q) => q.eq("date", args.date))
+      .withIndex("by_date", (q) => q.eq("date", args.date))
       .filter((q) => q.eq(q.field("status"), "booked"))
       .collect();
   },
@@ -151,5 +342,20 @@ export const getAllAppointmentsWithUser = query({
     );
 
     return result;
+  },
+});
+
+export const clearNonBookedAppointments = mutation({
+  handler: async (ctx) => {
+    const nonBookedAppointments = await ctx.db
+      .query("appointments")
+      .filter((q) => q.neq(q.field("status"), "booked"))
+      .collect();
+
+    for (const appointment of nonBookedAppointments) {
+      await ctx.db.delete(appointment._id);
+    }
+
+    return nonBookedAppointments.length;
   },
 });

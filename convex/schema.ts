@@ -16,16 +16,22 @@ export default defineSchema({
   })
     .index("by_date", ["date"]),
   appointments: defineTable({
-    userId: v.string(), // clerkId
-    date: v.string(),   // "2026-03-25"
-    time: v.string(),   // "14:00"
+    userId: v.string(),
+    date: v.string(),
+    time: v.string(),     // start time
+    endTime: v.string(),  // end time
+
+    peopleCount: v.number(),
+    service: v.union(
+      v.literal("haircut"),
+      v.literal("haircut_beard")
+    ),
     status: v.union(
       v.literal("booked"),
       v.literal("cancelled"),
       v.literal("completed")
     ),
   })
-    .index("by_date_time", ["date", "time"])
-    .index("by_user", ["userId"]),
+    .index("by_date", ["date"])
 });
 
