@@ -10,6 +10,7 @@
 
 import type * as admin from "../admin.js";
 import type * as appointments from "../appointments.js";
+import type * as telegram from "../telegram.js";
 import type * as users from "../users.js";
 
 import type {
@@ -21,6 +22,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   appointments: typeof appointments;
+  telegram: typeof telegram;
   users: typeof users;
 }>;
 

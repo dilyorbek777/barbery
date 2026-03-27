@@ -4,6 +4,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import DisableSlots from "@/components/disableSlots";
+import EnableSlots from "@/components/enableSlots";
+import ShowDisabledSlots from "@/components/showDisabledSlots";
 
 // Shadcn UI Components
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -42,9 +44,10 @@ export default function AdminPanel() {
       </header>
 
       <Tabs defaultValue="list" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-8 bg-secondary/50 p-1">
+        <TabsList className="grid w-full max-w-md grid-cols-3 mb-8 bg-secondary/50 p-1 max-sm:grid-cols-1 max-sm:mb-32 max-sm:gap-2">
           <TabsTrigger value="list">Navbatdagilar</TabsTrigger>
           <TabsTrigger value="settings">Kundalik boshqaruv</TabsTrigger>
+          <TabsTrigger value="enable">Vaqt ochish</TabsTrigger>
         </TabsList>
 
         <TabsContent value="list">
@@ -167,10 +170,23 @@ export default function AdminPanel() {
                     }
                   }}
                 >
-                  Band bo'lmaganlarni tozalash
+                  Ortiqchalarni tozalash
                 </Button>
               </div>
               <DisableSlots />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="enable">
+          <Card>
+            <CardHeader>
+              <CardTitle>Vaqt ochish</CardTitle>
+              <CardDescription>Yopilgan kunlar yoki vaqtlarni qayta ochish.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4 border-t space-y-6">
+              <ShowDisabledSlots />
+              <EnableSlots />
             </CardContent>
           </Card>
         </TabsContent>

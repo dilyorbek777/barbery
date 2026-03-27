@@ -32,6 +32,10 @@ export default defineSchema({
       v.literal("completed")
     ),
   })
-    .index("by_date", ["date"])
+    .index("by_date", ["date"]),
+  telegramUsers: defineTable({
+    chatId: v.string(),
+    username: v.optional(v.string()),
+  }).index("by_chatId", ["chatId"]),
 });
 

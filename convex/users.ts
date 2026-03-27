@@ -54,3 +54,17 @@ export const getUser = query({
       .unique();
   },
 });
+
+// convex/users.ts
+export const createTelegramUser = mutation({
+  args: {
+    chatId: v.string(),
+    username: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("telegramUsers", {
+      chatId: args.chatId,
+      username: args.username,
+    });
+  },
+});

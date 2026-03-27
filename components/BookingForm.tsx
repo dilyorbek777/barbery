@@ -125,9 +125,9 @@ export default function BookingForm() {
             disabled={hasActiveAppointment}
             required
           >
-            <option value="haircut">Soch (40 min)</option>
+            <option value="haircut">Soch </option>
             <option value="haircut_beard">
-              Soch + Soqol (60 min)
+              Soch + Soqol
             </option>
           </select>
         </div>
@@ -137,19 +137,22 @@ export default function BookingForm() {
           <label className="text-sm font-medium">
             Odamlar soni
           </label>
-          <Input
-            type="number"
-            min={1}
-            value={peopleCount}
-            disabled={hasActiveAppointment}
-            required
-            onChange={(e) => {
-              const value = Number(e.target.value);
-              if (value >= 1) {
-                setPeopleCount(value);
-              }
-            }}
-          />
+          <div className="grid grid-cols-4 gap-2">
+            {[1, 2, 3, 4].map((num) => (
+              <Button
+                key={num}
+                variant={peopleCount === num ? "default" : "outline"}
+                className={cn(
+                  "w-full",
+                  peopleCount === num && "ring-2 ring-primary ring-offset-2"
+                )}
+                onClick={() => setPeopleCount(num)}
+                disabled={hasActiveAppointment}
+              >
+                {num}
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* ⏰ Available Slots */}
