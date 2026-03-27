@@ -6,21 +6,51 @@ import { api } from "../../../convex/_generated/api";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
+    console.log("TELEGRAM BODY:", body); // 🔥 IMPORTANT
 
-  const chatId = body.message?.chat?.id?.toString();
-  const username = body.message?.from?.username;
+    const message = body.message || body.edited_message;
 
-  if (!chatId) return new Response("ok");
+    if (!message) {
+      console.log("No message found");
+      return new Response("ok");
+    }
 
-  // 💾 Save user in DB
-  await convex.mutation(api.users.createTelegramUser, {
-    chatId,
-    username,
-  });
+    const chatId = message.chat?.id?.toString();
+    const username = message.from?.username;
 
-  // 📩 Send welcome message with button
-  await convex.action(api.telegram.sendWelcome, { chatId });
+    if (!chatId) {
+      console.log("No chatId");
+      return new Response("ok");
+    }
 
-  return new Response("ok");
+    console.log("Chat ID:", chatId);
+
+    // 💾 Save user
+    await convex.mutation(api.users.createTelegramUser, {
+      chatId,
+      username,
+    });
+
+    // 📩 Send message
+    await fetch(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: "✅ Bot is working!",
+        }),
+      }
+    );
+
+    return new Response("ok");
+  } catch (err) {
+    console.error("ERROR:", err);
+    return new Response("error", { status: 500 });
+  }
 }
